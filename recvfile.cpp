@@ -47,10 +47,12 @@ void *run_receive(void*) {
     if(f.isValid()) {
       //sendAck(f, true);
       printf("Frame number %d diterima dengan sukses.\n", num);
+      /*
       fstream log;
-      log.open ("sent.png", fstream::app);
+      log.open ("sent.txt", fstream::app);
         log << f.getData();
         log.close();
+      */
       q[num].push(f.getData());
     } else {
       //sendAck(f, false);
@@ -67,7 +69,11 @@ void *run_consume(void*) {
       usleep(DELAY);
     }
     printf("Mengkonsumsi byte : '%c'\n", q[pt].front());
-    
+
+    ofstream log;
+    log.open ("sent.jpeg", ios_base::app);
+    log << q[pt].front();
+    log.close();
     q[pt].pop();
     pt = (pt + 1) % BUFFER_SIZE;
   }
