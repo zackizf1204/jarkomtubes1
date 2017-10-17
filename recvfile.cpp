@@ -62,10 +62,11 @@ void *run_consume(void*) {
     while(q[pt].empty()) {
       usleep(DELAY);
     }
-    printf("Mengkonsumsi byte : '%c'\n", q[pt].front());
+    printf("Mengkonsumsi byte : '%c'\n", q[pt].front());   
     q[pt].pop();
     pt = (pt + 1) % BUFFER_SIZE;
   }
+  printf("exit\n");
   pthread_exit(NULL);
 }
 

@@ -1,7 +1,7 @@
 #ifndef __ACK_H
 #define __ACK_H
 
-#include "common.h"
+#include "var.h"
 
 using namespace std;
 
