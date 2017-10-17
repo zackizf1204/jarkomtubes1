@@ -11,7 +11,7 @@
 using namespace std;
 
 const int BUFFER_SIZE = 2 * WINDOWSIZE;
-const int N = 25;
+const int N = 256;
 
 struct arg_struct {
   // nothing, just formality :)
@@ -30,14 +30,14 @@ int sockfd;
 void paddr(unsigned char *a) {
   printf("%d.%d.%d.%d", a[0], a[1], a[2], a[3]);
 }
-/*
+
 void sendAck(Frame f, bool success) {
   printf("Mengirim ");
   printf(success? "ACK\n" : "NAK\n");
   Ack ack(success? ACK : NAK, f.getFrameNumber());
   sendto(sockfd, ack.serialize(), 6, 0, (struct sockaddr*) &remaddr, (socklen_t) addrlen);
 }
-*/
+
 void *run_receive(void*) {
   Frame f;
   while(1) {
@@ -45,17 +45,11 @@ void *run_receive(void*) {
     f.unserialize(buffer);
     int num = f.getFrameNumber();
     if(f.isValid()) {
-      //sendAck(f, true);
+      sendAck(f, true);
       printf("Frame number %d diterima dengan sukses.\n", num);
-      /*
-      fstream log;
-      log.open ("sent.txt", fstream::app);
-        log << f.getData();
-        log.close();
-      */
       q[num].push(f.getData());
     } else {
-      //sendAck(f, false);
+      sendAck(f, false);
       printf("Frame number %d diterima. Checksum error / format salah.\n", num);
     }
   }
@@ -71,7 +65,7 @@ void *run_consume(void*) {
     printf("Mengkonsumsi byte : '%c'\n", q[pt].front());
 
     ofstream log;
-    log.open ("sent.jpeg", ios_base::app);
+    log.open ("sent.txt", ios_base::app);
     log << q[pt].front();
     log.close();
     q[pt].pop();

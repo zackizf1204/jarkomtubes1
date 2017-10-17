@@ -29,7 +29,7 @@ public:
   }
   void unserialize(Byte* c) {
     value = c[0];
-    frame_number = (unsigned char)c[1] << 24 | (unsigned char)c[2] << 16 | (unsigned char)c[3] << 8 | (unsigned char)c[4];
+    frame_number = c[1] << 24 | c[2] << 16 | c[3] << 8 | c[4];
     checksum = c[5];
   }
   Byte getAck() {

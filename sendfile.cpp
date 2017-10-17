@@ -1,25 +1,55 @@
+/*
+ * Author : Rahman Adianto - 13513006
+ */
 
 #include "Frame.h"
 #include "Ack.h"
 #include <chrono>
-
-#include <pthread.h>
-
 const long long TIMEOUT = 3000; // millisecond
 
 int socketfd; // socket handler
 struct sockaddr_in transmitterAddr;
 struct sockaddr_in receiverAddr; 
-
+const int N = 256;
 typedef struct {
 	Frame frame;
 	chrono::system_clock::time_point lastSent;
 	Byte ack;
 } rQElement;
 
+Byte buffer[N];
 // buffer for retransmission, set chrono::system_clock::now() every transmit
 deque<rQElement> retransmissionQueue;
 
+// receive acknowledgement
+void* receiveAck(void* threadId) {
+	Ack ack;
+	socklen_t addrlen = sizeof(receiverAddr);
+	while(true) {
+		int recvlen = recvfrom(socketfd, buffer, 6, 0, (struct sockaddr*) &receiverAddr, &addrlen);
+	
+    ack.unserialize(buffer);
+    int frameNum = ack.getFrameNumber();
+    if(ack.isValid()) {
+    	cout << retransmissionQueue.front().frame.getFrameNumber() << ' ' << frameNum << endl;
+    	if (retransmissionQueue.front().frame.getFrameNumber() == frameNum) {
+    		while(retransmissionQueue.front().ack == ACK) {
+    			retransmissionQueue.pop_front();
+    			printf("sliding window\n");
+    		}
+    	}
+    	else {
+    		for (auto &it : retransmissionQueue) {
+    			if (it.frame.getFrameNumber() == frameNum) {
+    				it.ack = ACK;
+    			}
+    		}
+    	}
+    }
+	}
+
+	pthread_exit(NULL);
+}
 
 class Transmitter {
 	public:
@@ -49,9 +79,13 @@ class Transmitter {
 		}
 
 		void send() {
+			/* Create thread for receive ACK signal from receiver */
+			pthread_t thread;
+			pthread_create(&thread, NULL, receiveAck, NULL);
 
 			socklen_t addrlen = sizeof(receiverAddr);
 			for (auto it : frames) {
+				if (retransmissionQueue.size() < WINDOWSIZE) {
 					if (!sendto(socketfd, it.serialize(), 9, 0, (struct sockaddr *)&receiverAddr, addrlen)) {
 						perror("sendto failed");
 					} 
@@ -59,6 +93,36 @@ class Transmitter {
 						printf("Paket %d dikirim\n", it.getFrameNumber());
 					}
 
+					rQElement rqe;
+					rqe.frame = it;
+					rqe.lastSent = chrono::system_clock::now();
+					rqe.ack = NAK;
+					retransmissionQueue.push_back(rqe);
+				}
+
+				while (retransmissionQueue.size() == WINDOWSIZE) {
+					if (!retransmissionQueue.empty()) {
+						if (timeDiv(chrono::system_clock::now(), retransmissionQueue.front().lastSent) > TIMEOUT) {
+							rQElement rqe;
+							rqe.frame = retransmissionQueue.front().frame;
+							rqe.lastSent = chrono::system_clock::now();
+							rqe.ack = retransmissionQueue.front().ack;
+/*
+							// retransmission if timeout and NAK
+							if (rqe.ack == NAK) {
+								if (!sendto(socketfd, rqe.frame.serialize(), 9, 0, (struct sockaddr *)&receiverAddr, addrlen)) {
+									perror("sendto failed");
+								} 
+								else {
+									printf("Paket %d dikirim ulang\n", rqe.frame.getFrameNumber());
+								}
+							}
+*/
+							retransmissionQueue.pop_front();
+							//retransmissionQueue.push_back(rqe);
+						}
+					}
+				} 
 			}
 		}
 
