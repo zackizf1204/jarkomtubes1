@@ -20,37 +20,37 @@
 7. Proses terus dilakukan sampai semua data berhasil dikirim
 
 ## Fungsi terkait
-**isValid**
+**isValid** <br>
    Untuk memeriksa hasil checksum yang telah dikirim
    
-**serialize**
+**serialize** <br>
    Untuk memasukkan byte ke frame untuk dikirim
    
-**unserialize**
+**unserialize** <br>
    Untuk mengeluarkan byte dari frame setelah dikirim
    
-**getChecksum**
+**getChecksum** <br>
    Untuk menghitung checksum dari data yang akan dikirim
    
-**sendAck**
+**sendAck** <br>
    Untuk mengirimkan ACK ke sender setelah mendapat data yang dikirim
    
-**receiveAck**
+**receiveAck** <br>
    Untuk menerima ACK yang dikirim oleh receiver, didalamnya memanggil fungsi untuk memeriksa checksum
    
-**timeDiv**
+**timeDiv** <br>
    Untuk menghitung selisih waktu dari mengirim data hingga menerima ACK, digunakan untuk mengecek timeout
    
-**send**
+**send** <br>
    Untuk mengirim data dari sender ke receiver dan mengatur sliding window
    
- **create_socket**
+ **create_socket** <br>
    Untuk membuat socket
    
- **initiate_binding**
+ **initiate_binding** <br>
    Untuk mempersiapkan binding
    
-**bind_socekt**
+**bind_socket** <br>
    Untuk memulai binding antara sender dan receiver
 
 ## Pembagian Tugas
