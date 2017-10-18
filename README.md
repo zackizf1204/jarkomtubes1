@@ -19,6 +19,40 @@
 6. Jika satu window telah selesai, window akan bergeser untuk mengirim bagian data selanjutnya
 7. Proses terus dilakukan sampai semua data berhasil dikirim
 
+## Fungsi terkait
+**isValid**
+   Untuk memeriksa hasil checksum yang telah dikirim
+   
+**serialize**
+   Untuk memasukkan byte ke frame untuk dikirim
+   
+**unserialize**
+   Untuk mengeluarkan byte dari frame setelah dikirim
+   
+**getChecksum**
+   Untuk menghitung checksum dari data yang akan dikirim
+   
+**sendAck**
+   Untuk mengirimkan ACK ke sender setelah mendapat data yang dikirim
+   
+**receiveAck**
+   Untuk menerima ACK yang dikirim oleh receiver, didalamnya memanggil fungsi untuk memeriksa checksum
+   
+**timeDiv**
+   Untuk menghitung selisih waktu dari mengirim data hingga menerima ACK, digunakan untuk mengecek timeout
+   
+**send**
+   Untuk mengirim data dari sender ke receiver dan mengatur sliding window
+   
+ **create_socket**
+   Untuk membuat socket
+   
+ **initiate_binding**
+   Untuk mempersiapkan binding
+   
+**bind_socekt**
+   Untuk memulai binding antara sender dan receiver
+
 ## Pembagian Tugas
 Ega Rifqi Saputra - 13515015        :<br>
 Rizky Elzandi Barik - 13515030      :<br>
