@@ -1,10 +1,20 @@
 # Tugas Besar Jarkom IF3130 : Sliding Window
 
 ## Petunjuk Penggunaan
+1. Buka dua terminal yang berbeda
+2. Masukkan "./sendfile <filename> <windowsize> <buffersize> <destination_ip> <destination_port>" pada salah satu terminal, dan "./recvfile <filename> <windowsize> <buffersize> <port>" pada terminal yang berbeda.
+3. port dan ip address pada sendfile dan recvfile harus sama
+4. filename pada sendfile merupakan file yang akan dikirim, sehingga namanya harus sama dengan file yang ada
+5. filename pada recvfile merupakan nama file yang akan diterima, namanya bebas karena akan membentuk file baru, tetapi formatnya harus sama dengan file pada sendfile
+6. windowsize tidak boleh lebih besar dari buffersize
+
 
 ## Cara Kerja Sliding Window
 
 ## Pembagian Tugas
+Ega Rifqi Saputra - 13515015        :
+Rizky ELzandi Barik - 13515030      :
+Zacki Zulfikar Fauzi - 13515147     :
 
 ## Soal 
 1. Apa yang terjadi jika advertised window yang dikirim bernilai 0? Apa cara untuk menangani hal tersebut?
