@@ -11,6 +11,13 @@
 
 
 ## Cara Kerja Sliding Window
+1. Data dibaca ke buffer
+2. Data dikirimkan dari buffer ke receiver
+3. Ketika receiver menerima data, ACK akan dikirim dari receiver ke sender sebagai konfirmasi data sudah diterima
+4. Ketika ACK diterima, data yang ada di buffer akan dihapus
+5. Proses akan dilanjutkan sampai buffer yang di dalam window telah terikirim semua
+6. Jika satu window telah selesai, window akan bergeser untuk mengirim bagian data selanjutnya
+7. Proses terus dilakukan sampai semua data berhasil dikirim
 
 ## Pembagian Tugas
 Ega Rifqi Saputra - 13515015        :<br>
