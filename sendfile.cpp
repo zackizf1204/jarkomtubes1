@@ -1,15 +1,13 @@
-/*
- * Author : Rahman Adianto - 13513006
- */
 
 #include "Frame.h"
 #include "Ack.h"
 #include <chrono>
-const long long TIMEOUT = 3000; // millisecond
+const long long TIMEOUT = 1000; // millisecond
 
 int socketfd; // socket handler
-struct sockaddr_in transmitterAddr;
-struct sockaddr_in receiverAddr; 
+struct sockaddr_in senderAddr;
+struct sockaddr_in receiverAddr;
+int BUFFER_SIZE; 
 const int N = 256;
 typedef struct {
 	Frame frame;
@@ -51,21 +49,22 @@ void* receiveAck(void* threadId) {
 	pthread_exit(NULL);
 }
 
-class Transmitter {
+class Sender {
 	public:
-		Transmitter(char* host, int port, char* filename) {
-			/* Construct the transmiter sockaddr structure */
-			memset(&transmitterAddr, 0, sizeof(transmitterAddr));
-			transmitterAddr.sin_family = AF_INET;
-			transmitterAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-			transmitterAddr.sin_port = htons(0);
+		Sender(char* filename, int window, int buffersize, char* host, int port) {
+			windowsize=window;
+			bufsize = buffersize;
+			memset(&senderAddr, 0, sizeof(senderAddr));
+			senderAddr.sin_family = AF_INET;
+			senderAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+			senderAddr.sin_port = htons(0);
 
 			/* Create the socket */
 			if ((socketfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 				perror("Failed to create socket");
 			}
 
-			if (bind(socketfd, (struct sockaddr *) &transmitterAddr, sizeof(transmitterAddr)) < 0) {
+			if (bind(socketfd, (struct sockaddr *) &senderAddr, sizeof(senderAddr)) < 0) {
 				perror("Failed to bind socket");
 			}
 
@@ -85,7 +84,7 @@ class Transmitter {
 
 			socklen_t addrlen = sizeof(receiverAddr);
 			for (auto it : frames) {
-				if (retransmissionQueue.size() < WINDOWSIZE) {
+				if (retransmissionQueue.size() < windowsize) {
 					if (!sendto(socketfd, it.serialize(), 9, 0, (struct sockaddr *)&receiverAddr, addrlen)) {
 						perror("sendto failed");
 					} 
@@ -98,16 +97,16 @@ class Transmitter {
 					rqe.lastSent = chrono::system_clock::now();
 					rqe.ack = NAK;
 					retransmissionQueue.push_back(rqe);
-				}
 
-				while (retransmissionQueue.size() == WINDOWSIZE) {
+				}
+				while (retransmissionQueue.size() == windowsize) {
 					if (!retransmissionQueue.empty()) {
 						if (timeDiv(chrono::system_clock::now(), retransmissionQueue.front().lastSent) > TIMEOUT) {
 							rQElement rqe;
 							rqe.frame = retransmissionQueue.front().frame;
 							rqe.lastSent = chrono::system_clock::now();
 							rqe.ack = retransmissionQueue.front().ack;
-/*
+							/*
 							// retransmission if timeout and NAK
 							if (rqe.ack == NAK) {
 								if (!sendto(socketfd, rqe.frame.serialize(), 9, 0, (struct sockaddr *)&receiverAddr, addrlen)) {
@@ -117,22 +116,23 @@ class Transmitter {
 									printf("Paket %d dikirim ulang\n", rqe.frame.getFrameNumber());
 								}
 							}
-*/
+							*/
 							retransmissionQueue.pop_front();
-							//retransmissionQueue.push_back(rqe);
 						}
 					}
 				} 
 			}
 		}
 
-		~Transmitter() {
+		~Sender() {
 			close(socketfd);
 		}
 
 	private:
 		// array of frame
 		std::vector<Frame> frames;
+		int windowsize;
+		int bufsize;
 		void messageParsing(char* filename) {
 			std::ifstream infile;
 			infile.open(filename);
@@ -140,12 +140,14 @@ class Transmitter {
 			char currentChar;
 			int counter = 0;
 			int checksum;
+			
 			while (infile.get(currentChar)) {
-				Frame frame(counter % (2 * WINDOWSIZE), currentChar);
+				Frame frame(counter % (bufsize), currentChar);
 				frames.push_back(frame);
 				counter++; 
 			}
 		}
+
 
 		// div antar dua waktu
 		long long timeDiv(chrono::system_clock::time_point t1, chrono::system_clock::time_point t2) {
@@ -154,11 +156,9 @@ class Transmitter {
 };
 
 int main(int argc, char* argv[]) {
+	BUFFER_SIZE = atoi(argv[3]);
 	if (argc > 3) {
-		Transmitter transmitter(argv[1], atoi(argv[2]), argv[3]);
-		transmitter.send();
-	}
-	else {
-		printf("Usage : transmitter [receiver IP] [receiver port] [message.txt]\n");
+		Sender sender(argv[1], atoi(argv[2]), atoi(argv[3]), argv[4], atoi(argv[5]));
+		sender.send();
 	}
 }

@@ -10,30 +10,31 @@
 
 using namespace std;
 
-const int BUFFER_SIZE = 2 * WINDOWSIZE;
+int BUFFER_SIZE;
 const int N = 256;
-
+int windowsizegl;
 struct arg_struct {
-  // nothing, just formality :)
 };
 
 struct arg_struct args;
 
-queue<Byte> q[BUFFER_SIZE];
+queue<Byte> q;
 Byte buffer[N];
 struct sockaddr_in myaddr;
 struct sockaddr_in remaddr;
 socklen_t addrlen;
 int sockfd;
-
+char * filename;
 /* paddr: print the IP address in a standard decimal dotted format */
 void paddr(unsigned char *a) {
   printf("%d.%d.%d.%d", a[0], a[1], a[2], a[3]);
 }
 
 void sendAck(Frame f, bool success) {
-  printf("Mengirim ACK\n");
-  Ack ack(f.getFrameNumber()+1, WINDOWSIZE);
+  printf("Mengirim ");
+  printf(success? "ACK\n" : "NAK\n");
+ // Ack ack(success? ACK : NAK, f.getFrameNumber());
+  Ack ack(f.getFrameNumber()+1, windowsizegl);
   sendto(sockfd, ack.serialize(), 6, 0, (struct sockaddr*) &remaddr, (socklen_t) addrlen);
 }
 
@@ -46,7 +47,7 @@ void *run_receive(void*) {
     if(f.isValid()) {
       sendAck(f, true);
       printf("Frame number %d diterima dengan sukses.\n", num);
-      q[num].push(f.getData());
+      q.push(f.getData());
     } else {
       sendAck(f, false);
       printf("Frame number %d diterima. Checksum error / format salah.\n", num);
@@ -58,17 +59,19 @@ void *run_receive(void*) {
 void *run_consume(void*) {
   int pt = 0;
   while(1) {
-    while(q[pt].empty()) {
+    while(q.empty()) {
       usleep(DELAY);
     }
-    printf("Mengkonsumsi byte : '%c'\n", q[pt].front());
-
-    ofstream log;
-    log.open ("sent.txt", ios_base::app);
-    log << q[pt].front();
-    log.close();
-    q[pt].pop();
-    pt = (pt + 1) % BUFFER_SIZE;
+    if(q.size()>=BUFFER_SIZE){
+      ofstream log;
+      log.open (filename, ios_base::app);
+      int i;
+      for(i=0;i<BUFFER_SIZE;i++){
+        log << q.front();
+        q.pop();
+      }
+      log.close();
+    }
   }
   pthread_exit(NULL);
 }
@@ -78,7 +81,7 @@ char** argv;
 
 class Receiver {
 public:
-  Receiver(char* filename, int windowsize, int buffersize, int defport) {
+  Receiver( int windowsize, int buffersize, int defport) {
     create_socket();
     initiate_binding(defport);
     bind_socket();
@@ -105,7 +108,6 @@ private:
       perror("Tidak dapat membuat socket\n");
       exit(0);
     }
-    printf("Socket created with descriptor %d\n", sockfd);
   }
 
   void initiate_binding(int defport) {
@@ -133,13 +135,10 @@ private:
   pthread_t consumer_thread;
 };
 
-int main(int _argc, char *_argv[]) {
-  argc = _argc;
-  argv = new char*[argc];
-  for(int i = 0; i < argc; i++) {
-    argv[i] = new char[strlen(_argv[i])];
-    memcpy(argv[i], _argv[i], sizeof(_argv[i]));
-  }
-  Receiver rec(argv[1],atoi(argv[2]),atoi(argv[3]),atoi(argv[4]));
+int main(int argc, char *argv[]) {
+  filename=argv[1];
+  BUFFER_SIZE=atoi(argv[3]);
+  windowsizegl = atoi(argv[2]);
+  Receiver rec(atoi(argv[2]),atoi(argv[3]),atoi(argv[4]));
   return 0;
 }
