@@ -16,15 +16,15 @@ public:
     frame_number = frameNumber;
     data = Data;
     checksum = 0;
-    checksum = getCRC(serialize());
+    checksum = getChecksum(serialize());
   }
 
-  // check if checksum == generated checksum
+  // Mengecek checksum
   bool isValid() {
-    return (checksum==getCRC(serialize()) && soh==SOH && stx==STX && etx==ETX);
+    return (checksum==getChecksum(serialize()) && soh==SOH && stx==STX && etx==ETX);
   }
 
-  // convert this to char*
+  // mengubah frame menjadi string agar siap dikirim
   Byte* serialize() {
     Byte* temp = new Byte[9];
     temp[0]=soh;
@@ -40,7 +40,7 @@ public:
     return temp;
   }
 
-  // convert char* to this
+  // mengubah string yang diterima menjadi objek frame
   void unserialize(Byte* c) {
     //cout << c[1] << ' ' << c[2] << ' ' << c[3] << ' ' << c[4] << endl;
     frame_number = (c[1] << 24) | (c[2] << 16) | (c[3] << 8) | c[4];
@@ -65,29 +65,17 @@ public:
 
 private:
   // return checksum computed based on data
-  Byte getCRC(Byte* BitString) {
+  Byte getChecksum(Byte* BitString) {
     unsigned long long x = 0;
-    for (int i=0; i<8; i++)
-      x = (x<<8) + (unsigned long long) BitString[i];
-    unsigned long long polynomial = 0xEA80000000000000;
-    for (int i=0; i<56; i++) {
-      if ((x>>(63-i)) % 2 == 1)
-        x = x ^ polynomial;
-      else
-        x = x ^ 0x0;
-      polynomial = polynomial >> 1;
-    }
+    Byte f1, f2, f3, f4;
 
-    x = x<<8;
-    polynomial = 0xEA80;
-    for (int i=0; i<8; i++) {
-      if ((x>>(15-i)) % 2 == 1)
-        x = x ^ polynomial;
-      else
-        x = x ^ 0x0;
-      polynomial = polynomial >> 1;
-    }
+    f1=(frame_number >> 24) & 0xFF;
+    f2=(frame_number >> 16) & 0xFF;
+    f3=(frame_number >> 8) & 0xFF;
+    f4=frame_number & 0xFF;
 
+    x = soh + f1 + f2 + f3 + f4 + stx + data + stx;
+    x = x % 256;
     return (Byte)x;
   }
 

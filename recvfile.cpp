@@ -32,9 +32,8 @@ void paddr(unsigned char *a) {
 }
 
 void sendAck(Frame f, bool success) {
-  printf("Mengirim ");
-  printf(success? "ACK\n" : "NAK\n");
-  Ack ack(success? ACK : NAK, f.getFrameNumber());
+  printf("Mengirim ACK\n");
+  Ack ack(f.getFrameNumber()+1, WINDOWSIZE);
   sendto(sockfd, ack.serialize(), 6, 0, (struct sockaddr*) &remaddr, (socklen_t) addrlen);
 }
 

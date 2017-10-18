@@ -8,56 +8,59 @@ using namespace std;
 class Ack {
 public:   
   Ack() {}
-  Ack(Byte b, int frameNumber) {
-    value = b;
-    frame_number = frameNumber;
+  Ack(int nextFrameNumber, int windowsize) {
+    ack = ACK;
+    next_frame_number = nextFrameNumber;
+    advwindowsize = windowsize;
     checksum = 0;
-    checksum = getCRC(serialize());
+    checksum = getChecksum(serialize());
   }
   bool isValid() {
-    return (checksum==getCRC(serialize()));
+    return (checksum==getChecksum(serialize()) && ack == ACK);
   }
   Byte* serialize() {
-    Byte* temp = new Byte[6];
-    temp[0]=value;
-    temp[1]=(frame_number >> 24) & 0xFF;
-    temp[2]=(frame_number >> 16) & 0xFF;
-    temp[3]=(frame_number >> 8) & 0xFF;
-    temp[4]=frame_number & 0xFF;
-    temp[5]=checksum;
+    Byte* temp = new Byte[7];
+    temp[0]=ack;
+    temp[1]=(next_frame_number >> 24) & 0xFF;
+    temp[2]=(next_frame_number >> 16) & 0xFF;
+    temp[3]=(next_frame_number >> 8) & 0xFF;
+    temp[4]=next_frame_number & 0xFF;
+    temp[5]=advwindowsize;
+    temp[6]=checksum;
     return temp;
   }
   void unserialize(Byte* c) {
-    value = c[0];
-    frame_number = c[1] << 24 | c[2] << 16 | c[3] << 8 | c[4];
-    checksum = c[5];
+    ack = c[0];
+    next_frame_number = c[1] << 24 | c[2] << 16 | c[3] << 8 | c[4];
+    advwindowsize = c[5];
+    checksum = c[6];
   }
   Byte getAck() {
-    return value;
+    return ack;
   }
   unsigned int getFrameNumber() {
-    return frame_number;
+    return next_frame_number;
   }
 
 private:
   // return checksum computed based on data
-  Byte getCRC(Byte* BitString) {
-    unsigned long x = 0;
-    for (int i=0; i<5; i++)
-      x = (x<<8) + (unsigned long) BitString[i];
-    x = x<<8;
-    unsigned long polynomial = 0xEA8000000000;
-    for (int i=0; i<40; i++) {
-      if ((x>>(47-i)) % 2 == 1)
-        x = x ^ polynomial;
-      else
-        x = x ^ 0x0;
-      polynomial = polynomial >> 1;
-    }
+  Byte getChecksum(Byte* BitString) {
+   unsigned long long x = 0;
+    Byte f1, f2, f3, f4;
+
+    f1=(next_frame_number >> 24) & 0xFF;
+    f2=(next_frame_number >> 16) & 0xFF;
+    f3=(next_frame_number >> 8) & 0xFF;
+    f4=next_frame_number & 0xFF;
+
+    x = ack + f1 + f2 + f3 + f4 + advwindowsize;
+    x = x % 256;
     return (Byte)x;
   }
-  Byte value;
-  unsigned int frame_number;
+
+  Byte ack;
+  unsigned int advwindowsize;
+  unsigned int next_frame_number;
   Byte checksum;
 };
 
