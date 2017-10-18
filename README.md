@@ -51,5 +51,6 @@
         Nilai checksum dalam TCP header diambil dari protocol sender untuk membantu receiver mendeteksi pesan yang corrupt.
     * **Urgent pointer <br>**
         Field ini sering diatur nilainya menjadi nol atau diabaikan, tetapi bersamaan dengan salah satu dari control flag, field ini dapat digunakan sebagai data offset untuk menandakan subset dari sebuah pesan yang membutuhkan prioritas dalam memprosesnya.
-    * TCP optional data <br>
+    * **TCP optional data <br>**
+         Field optional mempunyai 3 jenis field yaitu Option-Kind untuk mengindikasikan tipe dari field, Option-Length untuk mengindikasikan panjang total dari field optional dan Option-Data yang berisi nilai dari option jika dapat dijalankan.
       
