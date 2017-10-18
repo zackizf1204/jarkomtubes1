@@ -7,6 +7,7 @@
 4. filename pada sendfile merupakan file yang akan dikirim, sehingga namanya harus sama dengan file yang ada
 5. filename pada recvfile merupakan nama file yang akan diterima, namanya bebas karena akan membentuk file baru, tetapi formatnya harus sama dengan file pada sendfile
 6. windowsize tidak boleh lebih besar dari buffersize
+7. recvfile harus lebih dulu dijalankan dibanding dengan sendfile
 
 
 ## Cara Kerja Sliding Window
